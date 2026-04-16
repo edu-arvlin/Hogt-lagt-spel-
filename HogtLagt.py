@@ -5,15 +5,20 @@ def ladda_highscore():
     try:
         with open("hogt_lagt.json", "r", encoding="utf-8") as f:
             data = json.load(f)
-        return data.get("highscore", 0)
+        if "highscores" in data:
+            return data.get("highscores", [])
+        elif "highscore" in data:
+            spara_highscore([])
+            return []
+        return []
     except (FileNotFoundError, json.JSONDecodeError):
-        return 0
+        return []
 
-def spara_highscore(highscore):
-    data = {"highscore": highscore}
+def spara_highscore(highscores):
+    data = {"highscores": highscores}
     with open("hogt_lagt.json", "w", encoding="utf-8") as f:
         json.dump(data, f, indent=4)
-    return highscore
+    return highscores
 
     
 def hogt_lagt():
@@ -51,17 +56,25 @@ def main():
             namn = input("Ange ditt username: ")
             
             current_highscore = ladda_highscore()
-            if antal_gissningar < current_highscore or current_highscore == 0:
-                spara_highscore(antal_gissningar)
-                print(f"Nytt highscore sparades! {antal_gissningar} gissningar.")
             
+            spelare = {}
+            spelare["namn"] = namn
+            spelare["gissningar"] = antal_gissningar
+            
+            highscore_list = current_highscore if isinstance(current_highscore, list) else []
+            highscore_list.append(spelare)
+            
+            spara_highscore(highscore_list)
+            print(f"Nytt highscore sparades! {antal_gissningar} gissningar.")
             print(f"{namn} gissade rätt på {antal_gissningar} gissningar.")
         elif val == "2":
-            highscore = ladda_highscore()
-            if highscore == 0:
-                print("Inget högscore sparat än.")
+            highscores = ladda_highscore()
+            if not highscores:
+                print("Inget highscore sparat än.")
             else:
-                print(f"Aktuellt highscore: {highscore} gissningar.")
+                print("\n---- HIGHSCORES ----")
+                for i, spelare in enumerate(highscores, 1):
+                    print(f"{i}. {spelare['namn']}: {spelare['gissningar']} gissningar")
         elif val == "3":
             print("Tack för att du spelade!")
             break
